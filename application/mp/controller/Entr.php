@@ -321,11 +321,20 @@ class Entr
                     break;
             }
         } else {
-            $this->mpMsg($msg);
-            $options=session('mp_options');
-            $weObj = new \Wechat($options);
-            $weObj->getRev();
-            $weObj->transfer_customer_service()->reply();
+            // 处理 智能回复 by lazen
+            $rule = Db::name('mp_rule')->where(['mpid' => $this->mid, 'keyword' => '**', 'status' => '1'])
+                ->where('event', 'null')
+                ->order('id Desc')->find();
+            if (!empty($rule) && 'addon' == $rule['type'] ){
+                loadAdApi($rule['addon'], $msg,['mid'=>$this->mid,'addon'=>$rule['addon']]);
+            }
+            else {
+                $this->mpMsg($msg);
+                $options = session('mp_options');
+                $weObj = new \Wechat($options);
+                $weObj->getRev();
+                $weObj->transfer_customer_service()->reply();
+            }
         }
 
     }
